@@ -166,7 +166,14 @@ class Preprocessing:
         Valida se todas as listas (colunas) no dicionário do dataset
         têm o mesmo comprimento.
         """
-        pass
+        if not self.dataset:
+            return
+        
+        tamanho_base = len(next(iter(self.dataset.values())))
+
+        for col_name, col_data in self.dataset.items():
+            if len(col_data) != tamanho_base:
+                raise ValueError(f"As colunas têm tamanhos diferentes. Coluna '{col_name}' tem {len(col_data)} itens.")
 
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
