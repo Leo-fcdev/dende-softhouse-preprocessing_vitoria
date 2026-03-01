@@ -21,236 +21,284 @@ class Statistics:
         self.dataset = dataset
 
     def mean(self, column):
-        """
-        Calcula a média aritmética de uma coluna.
-
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-
-        Retorno
-        -------
-        float
-            A média dos valores na coluna.
-        """
-        pass
+   
+        # 1. Puxa os dados da coluna do dataset
+        data = self.dataset[column]
+      
+        # 2. Evita que haja uma divisão por zero, caso não haja dados
+        if not data:
+            return 0
+        
+        # 3. Soma os dados e divide pela quantidade
+        return sum(data) / len(data)
 
     def median(self, column):
-        """
-        Calcula a mediana de uma coluna.
+      
+       # 1. Cria uma cópia ordenada dos dados listados para não mudar os originais
+        if column == "priority":
+            priority_map = {"baixa": 0, "media": 1, "alta": 2}
+            data = sorted(self.dataset[column], key=lambda k: priority_map.get(k, 0))
+        else:
+            data = sorted(self.dataset[column])
 
-        A mediana é o valor central de um conjunto de dados ordenado.
+        n = len(data)
+        
+        if n == 0:
+            return None
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        # Encontra o índice do meio
+        mid_index = n // 2
 
-        Retorno
-        -------
-        float
-            O valor da mediana da coluna.
-        """
-        pass
+        # 2. Verifica se a quantidade de itens é ímpar ou par
+        if n % 2 == 1:
+            # Ímpar: Retorna o valor do centro
+            return data[mid_index]
+        else:
+            # Se for Par: Calcula a média dos dois dados do centro
+            val1 = data[mid_index - 1]
+            val2 = data[mid_index]
+            
+            # 3. Verifica se os dados são numeros para calcular a média 
+            if isinstance(val1, (int, float)) and isinstance(val2, (int, float)):
+                return (val1 + val2) / 2
+            else:
+                # Se for texto 
+                return val1
+        
 
     def mode(self, column):
-        """
-        Encontra a moda (ou modas) de uma coluna.
+      
+        data = self.dataset[column]
+        counts = {}
 
-        A moda é o valor que aparece com mais frequência no conjunto de dados.
+        # 1. Vê quantos vezes o dado aparece 
+        for item in data:
+            if item in counts:
+                counts[item] += 1
+            else:
+                counts[item] = 1
+        
+        # 2. Descobre qual foi a maior quantidade que apareceu
+        if not counts:
+            return []
+            
+        max_count = max(counts.values())
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-
-        Retorno
-        -------
-        list
-            Uma lista contendo o(s) valor(es) da moda.
-        """
-        pass
+        # 3. Retorna todos os daos que tiverem essa mesma quantidade de aparições
+       
+        return [key for key, value in counts.items() if value == max_count]
 
     def variance(self, column):
-        """
-        Calcula a variância populacional de uma coluna.
+      
+        values = self.dataset[column]
+        n = len(values)
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        #Calcula a média aritmética para usar como centro de referencia
+        mean_val = sum(values) / n
 
-        Retorno
-        -------
-        float
-            A variância dos valores na coluna.
-        """
-        pass
+        #Acumula  a soma dos quadrados dos desvios em relaçao a média
+        variance_acumulator = 0
+        for x in values:
+            variance_acumulator += (x - mean_val) ** 2 
+        
+        #Divide pelo total de elementos para obter a variancia populacional
+        variance_value = variance_acumulator / n
+       
+        return variance_value
 
     def stdev(self, column):
-        """
-        Calcula o desvio padrão populacional de uma coluna.
+       
+        values = self.dataset[column]
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        if len(values) == 0:
+            return 0.0
 
-        Retorno
-        -------
-        float
-            O desvio padrão dos valores na coluna.
-        """
-        pass
-
+        #Chama a função da variância e descobre a raiz quadrada dela 
+        return self.variance(column) ** 0.5
+    
     def covariance(self, column_a, column_b):
-        """
-        Calcula a covariância entre duas colunas.
+      
+        #Pega os dados de duas colunas e conta os itens
+        values_a = self.dataset[column_a]
+        values_b = self.dataset[column_b]
+        n = len(values_a)
 
-        Parâmetros
-        ----------
-        column_a : str
-            O nome da primeira coluna (X).
-        column_b : str
-            O nome da segunda coluna (Y).
+        #Verifica se as duas colunas tem o mesmo tamanho
+        if n != len(values_b):
+            raise ValueError("As colunas devem ter o mesmo tamanho")
+        
+        if n < 2:
+            return 0.0
+        
+        #Chama a função da Média
+        mean_a = self.mean(column_a)
+        mean_b = self.mean(column_b)
 
-        Retorno
-        -------
-        float
-            O valor da covariância entre as duas colunas.
-        """
-        pass
+        sum_products = 0
 
+        #Passa por todos os itens e verifica o quão longe os valores estão da media
+        for i in range(n):
+            diff_a = values_a[i] - mean_a
+            diff_b = values_b[i] - mean_b
+
+            sum_products += diff_a * diff_b
+        
+        return sum_products / (n - 1)
+    
     def itemset(self, column):
-        """
-        Retorna o conjunto de itens únicos em uma coluna.
+       
+        values = self.dataset[column]
+        itemset = set(values)        
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-
-        Retorno
-        -------
-        set
-            Um conjunto com os valores únicos da coluna.
-        """
-        pass
+        return itemset
 
     def absolute_frequency(self, column):
-        """
-        Calcula a frequência absoluta de cada item em uma coluna.
+        
+        #Pega a lista de dados da coluna e cria um dicionario vazio para os resultados
+        values = self.dataset[column] 
+        frequency = {}
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        #Roda item por item para saber quantas vezes eles aparecem  
+        for item in values:
+            if item in frequency:
+                frequency[item] += 1
+            else:
+                frequency[item] = 1
 
-        Retorno
-        -------
-        dict
-            Um dicionário onde as chaves são os itens e os valores são
-            suas contagens (frequência absoluta).
-        """
-        pass
+        return frequency    
 
     def relative_frequency(self, column):
-        """
-        Calcula a frequência relativa de cada item em uma coluna.
+        
+        #Chama a função de cima para pegar as contagens e olha o total
+        abs_freq = self.absolute_frequency(column)
+        total_itens = len(self.dataset[column])
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        rel_freq = {}
 
-        Retorno
-        -------
-        dict
-            Um dicionário onde as chaves são os itens e os valores são
-            suas proporções (frequência relativa).
-        """
-        pass
+        #Pega o dicionário e separa o nome do item da quantidade
+        for item, count in abs_freq.items():
+            rel_freq[item] = count / total_itens
+        
+        return rel_freq
 
     def cumulative_frequency(self, column, frequency_method='absolute'):
-        """
-        Calcula a frequência acumulada (absoluta ou relativa) de uma coluna.
+       
+        #Decide se a base usada será relativa ou absoluta
+        if frequency_method == 'relative':
+            base_data = self.relative_frequency(column)
+        else: 
+            base_data = self.absolute_frequency(column)
 
-        A frequência é calculada sobre os itens ordenados.
+        #Caso a coluna for "priority" ela não pode ser ordenada alfabeticamente
+        if column == "priority":
+            priority_map = {"baixa": 0, "media": 1, "alta":2}
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-        frequency_method : str, opcional
-            O método a ser usado: 'absolute' para contagem acumulada ou
-            'relative' para proporção acumulada (padrão é 'absolute').
+            sorted_keys = sorted(base_data.keys(), key=lambda k: priority_map.get(k, 0))
+        else: 
+            sorted_keys = sorted(base_data.keys())
 
-        Retorno
-        -------
-        dict
-            Um dicionário ordenado com os itens como chaves e suas
-            frequências acumuladas como valores.
-        """
-        pass
+        cumulative = {}
+        current_sum = 0
 
+        #Roda item po item e acumula o valor
+        for key in sorted_keys:
+            current_sum += base_data[key]
+            cumulative[key] = current_sum
+        
+        return cumulative
+    
     def conditional_probability(self, column, value1, value2):
-        """
-        Calcula a probabilidade condicional P(X_i = value1 | X_{i-1} = value2).
+    
+        if column not in self.dataset:
+            raise ValueError("Coluna não encontrada no dataset.")
 
-        Este método trata a coluna como uma sequência e calcula a probabilidade
-        de encontrar `value1` imediatamente após `value2`.
+        values = self.dataset[column]
 
-        Fórmula: P(A|B) = Contagem de sequências (B, A) / Contagem total de B
+        if len(values) < 2:
+            return 0.0 # Ou raise, dependendo da sua preferência
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-        value1 : any
-            O valor do evento consequente (A).
-        value2 : any
-            O valor do evento condicionante (B).
+        count_b = 0
+        count_ba = 0
 
-        Retorno
-        -------
-        float
-            A probabilidade condicional, um valor entre 0 e 1.
-        """
-        pass
+        # Percorre os pares (atual, próximo)
+        for current, next_val in zip(values[:-1], values[1:]):
+            if current == value2:
+                count_b += 1
+                if next_val == value1:
+                    count_ba += 1
+
+        if count_b == 0:
+            # Em vez de erro, é comum retornar 0.0 ou None em estatística
+            # Mas manteremos o erro se for uma regra de negócio sua
+            raise ValueError(f"O valor condicionante '{value2}' não ocorre na sequência.")
+
+        return count_ba / count_b
+    
 
     def quartiles(self, column):
-        """
-        Calcula os quartis (Q1, Q2 e Q3) de uma coluna.
+      
+        #Ordena os valores para aplicar a lógica de divisao por posicao
+        values = sorted(self.dataset[column])
+        n = len(values)
+        mid = n // 2
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
+        #Divide a lista em metade inferior e metade superior, e calcula o Q2 (mediana)
+        #Para n par: Q2 é a média dos dois elementos centrais
+        #Para n impar:Q2 é o elemento do meio, excluido das metades
+        if n % 2 == 0:
+            metInferior = values[:mid]
+            metSuperior = values[mid:]
+            Q2 = (values[mid - 1] + values[mid]) / 2
+        else:
+            metInferior = values[:mid]
+            metSuperior = values[mid+1:]
+            Q2 = values[mid]
 
-        Retorno
-        -------
-        dict
-            Um dicionário com os quartis Q1, Q2 (mediana) e Q3.
-        """
-        pass
 
+        #Aplica mesma lógica acima, agora na metade inferior
+        nInferior = len(metInferior)
+        midIndexQ1 = nInferior // 2
+        if nInferior % 2 == 0:
+            Q1 = (metInferior[midIndexQ1 - 1] + metInferior[midIndexQ1]) / 2
+        else:
+            Q1 = metInferior[midIndexQ1]
+
+        #Aplica a mesma lógica acima, agora na metade superior
+        nSuperior = len(metSuperior)
+        midIndexQ3 = nSuperior // 2
+        if nSuperior % 2 == 0:
+            Q3 = (metSuperior[midIndexQ3 - 1] + metSuperior[midIndexQ3]) / 2
+        else:
+            Q3 = metSuperior[midIndexQ3]
+
+        #Retorna como dicionário
+        return {"Q1": Q1, "Q2": Q2, "Q3": Q3}
+            
     def histogram(self, column, bins):
-        """
-        Gera um histograma baseado em buckets (intervalos).
+      
+        values = self.dataset[column]
 
-        Parâmetros
-        ----------
-        column : str
-            O nome da coluna (chave do dicionário do dataset).
-        bins : int
-            Número de buckets (intervalos).
+        #Define o alcance dos dados e calcula a largura de cada intervalo
+        min_values = min(values)
+        max_values = max(values)
+        width_value = (max_values - min_values) / bins
 
-        Retorno
-        -------
-        dict
-            Um dicionário onde as chaves são os intervalos (tuplas)
-            e os valores são as contagens.
-        """
-        pass
+        #Inicializa os contadores de cada bin com zero
+        contadoresBins= [0] * bins
 
+        for x in values:
+            #Calcula em qual bin o valor se encaixa pela sua posiçao relativa ao mínimo
+            #O min() garante que o valor máximo caia no último bin e nào fora do intervalo
+            index = min(int((x - min_values) / width_value), bins - 1)
+            contadoresBins[index] += 1
+
+        #Monta o dicionário final associando cada intervalo (tupla) a sua contagem
+        dictIntervalos = {}
+        for x in range(bins):
+            inicioIntervalo = min_values + width_value * x
+            fimIntervalo = inicioIntervalo + width_value
+            intervaloTotal = (inicioIntervalo, fimIntervalo)
+            dictIntervalos[intervaloTotal] = contadoresBins[x]
+       
+        return dictIntervalos
+    
