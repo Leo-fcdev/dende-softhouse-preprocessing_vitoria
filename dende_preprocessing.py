@@ -94,8 +94,16 @@ class Scaler:
 
             #Puxamos a lista de dados da coluna atual
             dados_coluna = self.dataset[coluna]
-            valor_min = min(dados_coluna)
-            valor_max = max(dados_coluna)
+
+            #Pega apenas o números válidos, ignorados os nones
+            valores_validos = [v for v in dados_coluna if v is not None]
+
+            #Se a coluna tiver apenas None, pula ela
+            if not valores_validos:
+                continue
+
+            valor_min = min(valores_validos)
+            valor_max = max(valores_validos)
 
             denominador = valor_max - valor_min
 
@@ -104,13 +112,16 @@ class Scaler:
             #Percorre por cada número da lista original
             for valor in dados_coluna:
                 
-                if denominador == 0:
-                    novo_valor = 0.0
+                if valor is None:
+                    nova_lista.append(None) #Deixa o vazio como vazip
                 else:
-                    novo_valor = (valor - valor_min) / denominador
+                    if denominador == 0:
+                        novo_valor = 0.0
+                    else:
+                        novo_valor = (valor - valor_min) / denominador
 
-                #Adiciona novo valor na nova lista
-                nova_lista.append(novo_valor)
+                    #Adiciona novo valor na nova lista
+                    nova_lista.append(novo_valor)
 
             self.dataset[coluna] = nova_lista
 
@@ -139,22 +150,36 @@ class Scaler:
 
             dados_coluna = self.dataset[coluna]
 
+            valores_validos = [v for v in dados_coluna if v is not None]
+
+            if not valores_validos:
+                continue
+
+            #Cria uma coluna temporária com números válidos, para ser utilizado no método stats
+            self.dataset['__coluna_temporaria__'] = valores_validos
+
             #Calcula a média e desvio padrao da coluna atual
-            media = stats.mean(coluna)
-            desvio_padrao = stats.stdev(coluna)
+            media = stats.mean('__coluna_temporaria__')
+            desvio_padrao = stats.stdev('__coluna_temporaria__')
+
+            #Apaga a coluna temporária
+            del self.dataset['__coluna_temporaria__']
 
             #Percorre numero por numero da coluna
             for valor in dados_coluna:
 
-                #Tratamento para evitar erro de divisao por 0 (caso os dados nao sejam variados) 
-                if desvio_padrao == 0:
-                    novo_valor = 0.0
+                if valor is None:
+                    nova_lista.append(None)
                 else:
-                    #Aplica a fórmula do Z Score
-                    novo_valor = (valor - media) / desvio_padrao
+                    #Tratamento para evitar erro de divisao por 0 (caso os dados nao sejam variados) 
+                    if desvio_padrao == 0:
+                        novo_valor = 0.0
+                    else:
+                        #Aplica a fórmula do Z Score
+                        novo_valor = (valor - media) / desvio_padrao
 
-                #Adiciona valor a lista nova
-                nova_lista.append(novo_valor)
+                    #Adiciona valor a lista nova
+                    nova_lista.append(novo_valor)
 
             #Substitui a lista antiga pela nova
             self.dataset[coluna] = nova_lista
