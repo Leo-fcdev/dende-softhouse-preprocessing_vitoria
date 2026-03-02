@@ -77,6 +77,7 @@ class Scaler:
         return list(columns) if columns else list(self.dataset.keys())
 
     def minMax_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
+
         """
         Aplica a normalização Min-Max ($X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$)
         nas colunas especificadas. Modifica o dataset.
@@ -84,7 +85,36 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+
+        # Vê quais colunas o usuário quer processar
+        colunas_alvo = self._get_target_columns(columns)
+
+        #Criar um loop para passar por cada coluna
+        for coluna in colunas_alvo:
+
+            #Puxamos a lista de dados da coluna atual
+            dados_coluna = self.dataset[coluna]
+            valor_min = min(dados_coluna)
+            valor_max = max(dados_coluna)
+
+            denominador = valor_max - valor_min
+
+            nova_lista = [] #Criar uma nova lista
+
+            #Percorre por cada número da lista original
+            for valor in dados_coluna:
+                
+                if denominador == 0:
+                    novo_valor = 0.0
+                else:
+                    novo_valor = (valor - valor_min) / denominador
+
+                #Adiciona novo valor na nova lista
+                nova_lista.append(novo_valor)
+
+            self.dataset[coluna] = nova_lista
+
+        return self.dataset
 
     def standard_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -94,7 +124,44 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+
+        #Identifica qual coluna será processada
+        colunas_alvo = self._get_target_columns(columns)
+
+        #Instancia a classe estatistica pra reaproveitas os calculos de média
+        stats = Statistics(self.dataset)
+
+        #Passa por cada coluna que foi selecionada
+        for coluna in colunas_alvo:
+            
+            #Criando nova lista
+            nova_lista = []
+
+            dados_coluna = self.dataset[coluna]
+
+            #Calcula a média e desvio padrao da coluna atual
+            media = stats.mean(coluna)
+            desvio_padrao = stats.stdev(coluna)
+
+            #Percorre numero por numero da coluna
+            for valor in dados_coluna:
+
+                #Tratamento para evitar erro de divisao por 0 (caso os dados nao sejam variados) 
+                if desvio_padrao == 0:
+                    novo_valor = 0.0
+                else:
+                    #Aplica a fórmula do Z Score
+                    novo_valor = (valor - media) / desvio_padrao
+
+                #Adiciona valor a lista nova
+                nova_lista.append(novo_valor)
+
+            #Substitui a lista antiga pela nova
+            self.dataset[coluna] = nova_lista
+
+        return self.dataset
+
+        
 
 class Encoder:
     """
