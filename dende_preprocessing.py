@@ -203,7 +203,24 @@ class Encoder:
         Args:
             columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        for col in columns:
+            if col not in self.dataset:
+                continue
+            dados_coluna = self.dataset[col]
+            
+            # 1. Isola as categorias únicas 
+            valores_unicos = []
+            for valor in dados_coluna:
+                if valor not in valores_unicos:
+                    valores_unicos.append(valor)
+
+            # 2. Atribui um número para cada categoria de texto 
+            mapeamento = {valor: indice for indice, valor in enumerate(valores_unicos)}
+            
+            # 3. Substitui os valores antigos pelos novos números na coluna
+            self.dataset[col] = [mapeamento[valor] for valor in dados_coluna]
+            
+        return self.dataset        
 
     def oneHot_encode(self, columns: Set[str]) -> Dict[str, List[Any]]:
         """
@@ -213,7 +230,27 @@ class Encoder:
         Args:
             columns (Set[str]): Colunas categóricas para codificar.
         """
-        pass
+        for col in columns:
+            if col not in self.dataset:
+                continue
+            dados_coluna = self.dataset[col]
+            
+            # 1. Identifica todas as categorias exclusivas da coluna
+            valores_unicos = set(dados_coluna)
+            
+            # 2. Cria uma nova coluna para cada categoria exclusiva encontrada
+            for valor_unico in valores_unicos:
+                nome_nova_coluna = f"{col}_{valor_unico}"
+                
+                # Preenche com 1 onde a categoria coincide e 0 onde não coincide
+                self.dataset[nome_nova_coluna] = [
+                    1 if valor == valor_unico else 0 for valor in dados_coluna
+                ]
+            
+            # 3. Exclui a coluna original, mantendo apenas as colunas binárias geradas
+            del self.dataset[col]
+            
+        return self.dataset
 
 
 class Preprocessing:
