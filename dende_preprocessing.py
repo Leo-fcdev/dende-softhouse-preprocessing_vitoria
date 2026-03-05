@@ -77,6 +77,7 @@ class Scaler:
         return list(columns) if columns else list(self.dataset.keys())
 
     def minMax_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
+
         """
         Aplica a normalização Min-Max ($X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$)
         nas colunas especificadas. Modifica o dataset.
@@ -84,7 +85,47 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+
+        # Vê quais colunas o usuário quer processar
+        colunas_alvo = self._get_target_columns(columns)
+
+        #Criar um loop para passar por cada coluna
+        for coluna in colunas_alvo:
+
+            #Puxamos a lista de dados da coluna atual
+            dados_coluna = self.dataset[coluna]
+
+            #Pega apenas o números válidos, ignorados os nones
+            valores_validos = [v for v in dados_coluna if v is not None]
+
+            #Se a coluna tiver apenas None, pula ela
+            if not valores_validos:
+                continue
+
+            valor_min = min(valores_validos)
+            valor_max = max(valores_validos)
+
+            denominador = valor_max - valor_min
+
+            nova_lista = [] #Criar uma nova lista
+
+            #Percorre por cada número da lista original
+            for valor in dados_coluna:
+                
+                if valor is None:
+                    nova_lista.append(None) #Deixa o vazio como vazip
+                else:
+                    if denominador == 0:
+                        novo_valor = 0.0
+                    else:
+                        novo_valor = (valor - valor_min) / denominador
+
+                    #Adiciona novo valor na nova lista
+                    nova_lista.append(novo_valor)
+
+            self.dataset[coluna] = nova_lista
+
+        return self.dataset
 
     def standard_scaler(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
@@ -94,7 +135,58 @@ class Scaler:
         Args:
             columns (Set[str]): Colunas para aplicar o scaler. Se vazio, tenta aplicar a todas.
         """
-        pass
+
+        #Identifica qual coluna será processada
+        colunas_alvo = self._get_target_columns(columns)
+
+        #Instancia a classe estatistica pra reaproveitas os calculos de média
+        stats = Statistics(self.dataset)
+
+        #Passa por cada coluna que foi selecionada
+        for coluna in colunas_alvo:
+            
+            #Criando nova lista
+            nova_lista = []
+
+            dados_coluna = self.dataset[coluna]
+
+            valores_validos = [v for v in dados_coluna if v is not None]
+
+            if not valores_validos:
+                continue
+
+            #Cria uma coluna temporária com números válidos, para ser utilizado no método stats
+            self.dataset['__coluna_temporaria__'] = valores_validos
+
+            #Calcula a média e desvio padrao da coluna atual
+            media = stats.mean('__coluna_temporaria__')
+            desvio_padrao = stats.stdev('__coluna_temporaria__')
+
+            #Apaga a coluna temporária
+            del self.dataset['__coluna_temporaria__']
+
+            #Percorre numero por numero da coluna
+            for valor in dados_coluna:
+
+                if valor is None:
+                    nova_lista.append(None)
+                else:
+                    #Tratamento para evitar erro de divisao por 0 (caso os dados nao sejam variados) 
+                    if desvio_padrao == 0:
+                        novo_valor = 0.0
+                    else:
+                        #Aplica a fórmula do Z Score
+                        novo_valor = (valor - media) / desvio_padrao
+
+                    #Adiciona valor a lista nova
+                    nova_lista.append(novo_valor)
+
+            #Substitui a lista antiga pela nova
+            self.dataset[coluna] = nova_lista
+
+        return self.dataset
+
+        
 
 class Encoder:
     """
