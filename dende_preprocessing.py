@@ -14,58 +14,80 @@ class MissingValueProcessor:
 
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
-        Retorna um novo dataset contendo apenas as linhas que possuem
+        Retorna um novo dataset contendo apenas as linhas que não possuem
         pelo menos um valor nulo (None) em uma das colunas especificadas.
-
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                            Se vazio, todas as colunas são consideradas.
-
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas com valores nulos.
         """
-        pass
+
+        target_cols = self._get_target_columns(columns)
+        row_count = len(next(iter(self.dataset.values())))
+
+        index_nulo = []
+        for i in range(row_count):
+            for col in target_cols:
+                if self.dataset[col][i] is None:
+                    index_nulo.append(i)
+                    break
+        
+        novo_dataset = {col: [] for col in self.dataset.keys()}
+        for i in index_nulo:
+            for col in self.dataset.keys():
+                novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
+        
 
     def notna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Retorna um novo dataset contendo apenas as linhas que não possuem
         valores nulos (None) em nenhuma das colunas especificadas.
-
-        Args:
-            columns (Set[str]): Um conjunto de nomes de colunas a serem verificadas.
-                               Se vazio, todas as colunas são consideradas.
-
-        Returns:
-            Dict[str, List[Any]]: Um dicionário representando as linhas sem valores nulos.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        row_count = len(next(iter(self.dataset.values())))
+
+        index_sem_nulo = []
+        for i in range(row_count):
+            tem_nulo = False
+            for col in target_cols:
+                if self.dataset[col][i] is None:
+                    tem_nulo = True
+                    break
+            
+            if not tem_nulo:
+                index_sem_nulo.append(i)
+        
+        novo_dataset = {col: [] for col in self.dataset.keys()}
+        for i in index_sem_nulo:
+            for col in self.dataset.keys():
+                novo_dataset[col].append(self.dataset[col][i])
+
+        return novo_dataset
 
     def fillna(self, columns: Set[str] = None, value: Any = 0) -> Dict[str, List[Any]]:
         """
         Preenche valores nulos (None) nas colunas especificadas com um valor fixo.
         Modifica o dataset da classe.
-
-        Args:
-            columns (Set[str]): Colunas onde o preenchimento será aplicado. 
-                               Se vazio, aplica a todas as colunas do dataset.
-            value (Any): Valor a ser inserido no lugar de None.
-
-        Returns:
-            Preprocessing: A própria instância (self) para permitir encadeamento.
         """
-        pass
+        target_cols = self._get_target_columns(columns)
+        row_count = len(next(iter(self.dataset.values())))
+
+        for col in target_cols:
+            for i in range(row_count):
+                if self.dataset[col][i] is None:
+                    self.dataset[col][i] = value
+        
+        return self.dataset
 
     def dropna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
         Remove as linhas que contêm valores nulos (None) nas colunas especificadas.
         Modifica o dataset da classe.
-
-        Args:
-            columns (Set[str]): Colunas a serem verificadas para valores nulos. Se vazio, todas as colunas são verificadas.
         """
-        pass
+        dataset_limpo = self.notna(columns)
 
+        for col in self.dataset.keys():
+            self.dataset[col] = dataset_limpo[col]
 
+        return self.dataset
 class Scaler:
     """
     Aplica transformações de escala em colunas numéricas do dataset.
@@ -236,7 +258,14 @@ class Preprocessing:
         Valida se todas as listas (colunas) no dicionário do dataset
         têm o mesmo comprimento.
         """
-        pass
+        if not self.dataset:
+            return
+        
+        tamanho_base = len(next(iter(self.dataset.values())))
+
+        for col_name, col_data in self.dataset.items():
+            if len(col_data) != tamanho_base:
+                raise ValueError(f"As colunas têm tamanhos diferentes. Coluna '{col_name}' tem {len(col_data)} itens.")
 
     def isna(self, columns: Set[str] = None) -> Dict[str, List[Any]]:
         """
