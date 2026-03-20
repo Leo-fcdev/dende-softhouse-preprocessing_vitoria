@@ -6,6 +6,7 @@ class MissingValueProcessor:
     Processa valores ausentes (representados como None) no dataset.
     """
     def __init__(self, dataset: Dict[str, List[Any]]):
+        #Recebe o dicionário de dados
         self.dataset = dataset
 
     def _get_target_columns(self, columns: Set[str]) -> List[str]:
@@ -19,15 +20,22 @@ class MissingValueProcessor:
         """
 
         target_cols = self._get_target_columns(columns)
+        
+        #Descobre o número de linha pegando o tamanho da primeira coluna
         row_count = len(next(iter(self.dataset.values())))
 
         index_nulo = []
+
+        # Percorre o dataset linha por linha
         for i in range(row_count):
+            # Para cada linha, verifica as colunas alvo
             for col in target_cols:
+                # Se eu encontrar um nulo nesta linha, guarda o índice e pulo para a próxima
                 if self.dataset[col][i] is None:
                     index_nulo.append(i)
                     break
         
+        #Cria um novo dicionário com linha que falharam no teste 
         novo_dataset = {col: [] for col in self.dataset.keys()}
         for i in index_nulo:
             for col in self.dataset.keys():
@@ -45,16 +53,20 @@ class MissingValueProcessor:
         row_count = len(next(iter(self.dataset.values())))
 
         index_sem_nulo = []
+
+        #Percorre o dataset linha por linha
         for i in range(row_count):
             tem_nulo = False
             for col in target_cols:
                 if self.dataset[col][i] is None:
                     tem_nulo = True
-                    break
+                    break #Se achar um nulo não precisa percorrer o restante
             
+            #Se passou limpa guarda o índice
             if not tem_nulo:
                 index_sem_nulo.append(i)
         
+        #Cria um dicionário com as linhas aprovadas
         novo_dataset = {col: [] for col in self.dataset.keys()}
         for i in index_sem_nulo:
             for col in self.dataset.keys():
@@ -71,6 +83,7 @@ class MissingValueProcessor:
         row_count = len(next(iter(self.dataset.values())))
 
         for col in target_cols:
+            #Onde encontrar None coloca um valor padrão
             for i in range(row_count):
                 if self.dataset[col][i] is None:
                     self.dataset[col][i] = value
@@ -82,8 +95,10 @@ class MissingValueProcessor:
         Remove as linhas que contêm valores nulos (None) nas colunas especificadas.
         Modifica o dataset da classe.
         """
+        #O método notna() fica com a responsabilidade de achar linha limpas
         dataset_limpo = self.notna(columns)
 
+        #Sobrescrevo as colunas sujas pelas limpas
         for col in self.dataset.keys():
             self.dataset[col] = dataset_limpo[col]
 
