@@ -150,7 +150,7 @@ class Scaler:
             for valor in dados_coluna:
                 
                 if valor is None:
-                    nova_lista.append(None) #Deixa o vazio como vazip
+                    nova_lista.append(None) #Deixa o vazio como vazio
                 else:
                     if denominador == 0:
                         novo_valor = 0.0
