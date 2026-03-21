@@ -56,7 +56,7 @@ def carregar_dados_spotify(caminho_arquivo):
 #Garante que esse código só rode neste arquivo.     
 if __name__ == "__main__":
     print("\n" + "="*30)
-    print(" Iniciando pipiline de Pré-processamento (Spotify)")
+    print(" Iniciando pipeline de Pré-processamento (Spotify)")
     print("="*50 + "\n")
 
     #Carrega os dados
